@@ -5,19 +5,30 @@ use nanos_sdk::buttons::ButtonEvent;
 use nanos_sdk::ecc::{Secp256k1, SeedDerive};
 use nanos_sdk::io;
 use nanos_sdk::io::ApduHeader;
-use nanos_ui::ui;
+use nanos_sdk::io::Reply;
+
+use nanos_ui::{ui::Validator, screen_util, bitmaps::Glyph};
+use nanos_ui::layout::{Layout, Location, StringPlace};
+
+use include_gif::include_gif;
 
 nanos_sdk::set_panic!(nanos_sdk::exiting_panic);
 
 pub const AGE_BIP32_PATH: [u32; 4] = nanos_sdk::ecc::make_bip32_path(b"m/414745'/0'/0'/0'");
+pub const LOGO: Glyph = Glyph::from_include(include_gif!("logo.gif"));
+
+fn display_homescreen() {
+    LOGO.invert().draw(0, 0);
+    "Ledger ready".place(Location::Bottom, Layout::RightAligned, false);
+}
 
 #[no_mangle]
 extern "C" fn sample_main() {
     let mut comm = io::Comm::new();
 
-    loop {
-        ui::SingleMessage::new("App age").show();
+    display_homescreen();
 
+    loop {
         // Wait for either a specific button push to exit the app
         // or an APDU command
         match comm.next_event() {
@@ -47,7 +58,6 @@ impl From<ApduHeader> for Ins {
     }
 }
 
-use nanos_sdk::io::Reply;
 
 fn handle_apdu(comm: &mut io::Comm, ins: Ins) -> Result<(), Reply> {
     if comm.rx == 0 {
@@ -56,18 +66,25 @@ fn handle_apdu(comm: &mut io::Comm, ins: Ins) -> Result<(), Reply> {
 
     match ins {
         Ins::GetRecipient => {
-            let pk = Secp256k1::derive_from_path(&AGE_BIP32_PATH)
-                .public_key()
-                .map_err(|x| Reply(0x6eu16 | (x as u16 & 0xff)))?;
-            comm.append(pk.as_ref());
+            if Validator::new("Send recipient").ask() {
+                let pk = Secp256k1::derive_from_path(&AGE_BIP32_PATH)
+                    .public_key()
+                    .map_err(|x| Reply(0x6eu16 | (x as u16 & 0xff)))?;
+                comm.append(pk.as_ref());
+            }
         }
         Ins::Unwrap => {
-            let sk = Secp256k1::derive_from_path(&AGE_BIP32_PATH);
-            let share = comm.get_data()?;
-            let ans = sk.ecdh(share)
-                .map_err(|_| Reply(0x6f00u16))?;
-            comm.append(ans.as_ref());
+            if Validator::new("Decrypt message").ask() {
+                let sk = Secp256k1::derive_from_path(&AGE_BIP32_PATH);
+                let share = comm.get_data()?;
+                let ans = sk.ecdh(share)
+                    .map_err(|_| Reply(0x6f00u16))?;
+                comm.append(ans.as_ref());
+            }
         }
     }
+
+    display_homescreen();
+
     Ok(())
 }

@@ -9,6 +9,7 @@ authors = ["Nics"]
 [dependencies]
 nanos_sdk = { git = "https://github.com/LedgerHQ/ledger-nanos-sdk.git" } 
 nanos_ui = { git = "https://github.com/LedgerHQ/ledger-nanos-ui.git" } 
+include_gif = { git = "https://github.com/LedgerHQ/sdk_include_gif" }
 
 [profile.release]
 opt-level = 'z' 
@@ -19,5 +20,5 @@ api_level = "1"
 curve = ["secp256k1"]
 flags = "0"
 icon = "ferris.gif"
-icon_small = "ferris_small.gif"
+icon_small = "icon_small.gif"
 path = [""]

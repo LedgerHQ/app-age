@@ -11,7 +11,7 @@
     ]
   },
   "flags": "0",
-  "icon": "ferris_small.gif",
+  "icon": "icon_small.gif",
   "name": "app-age",
   "targetId": "0x33100004",
   "version": "0.1.0"
