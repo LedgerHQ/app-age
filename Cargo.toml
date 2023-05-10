@@ -14,13 +14,10 @@ nanos_ui = { git = "https://github.com/LedgerHQ/ledger-nanos-ui.git" }
 opt-level = 'z' 
 lto = true
 
-[features]
-pending_review_screen = ["nanos_sdk/pending_review_screen"]
-
 [package.metadata.nanos]
 api_level = "1"
-curve = [""]
+curve = ["secp256k1"]
 flags = "0"
-icon = ""
-icon_small = ""
+icon = "ferris.gif"
+icon_small = "ferris_small.gif"
 path = [""]

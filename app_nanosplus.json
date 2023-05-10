@@ -1,0 +1,18 @@
+{
+  "apiLevel": "1",
+  "binary": "target/nanosplus/release/app.hex",
+  "dataSize": 0,
+  "derivationPath": {
+    "curves": [
+      "secp256k1"
+    ],
+    "paths": [
+      ""
+    ]
+  },
+  "flags": "0",
+  "icon": "ferris_small.gif",
+  "name": "app-age",
+  "targetId": "0x33100004",
+  "version": "0.1.0"
+}
