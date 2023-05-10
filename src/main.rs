@@ -7,7 +7,7 @@ use nanos_sdk::io;
 use nanos_sdk::io::ApduHeader;
 use nanos_sdk::io::Reply;
 
-use nanos_ui::{ui::Validator, screen_util, bitmaps::Glyph};
+use nanos_ui::{ui::Validator, bitmaps::Glyph};
 use nanos_ui::layout::{Layout, Location, StringPlace};
 
 use include_gif::include_gif;
