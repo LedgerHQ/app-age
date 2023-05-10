@@ -1,0 +1,26 @@
+[package]
+name = "app-age"
+version = "0.1.0"
+edition = "2021"
+authors = ["Nics"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+nanos_sdk = { git = "https://github.com/LedgerHQ/ledger-nanos-sdk.git" } 
+nanos_ui = { git = "https://github.com/LedgerHQ/ledger-nanos-ui.git" } 
+
+[profile.release]
+opt-level = 'z' 
+lto = true
+
+[features]
+pending_review_screen = ["nanos_sdk/pending_review_screen"]
+
+[package.metadata.nanos]
+api_level = "1"
+curve = [""]
+flags = "0"
+icon = ""
+icon_small = ""
+path = [""]
