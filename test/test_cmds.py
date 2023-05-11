@@ -13,9 +13,8 @@ from ledgerwallet.client import LedgerClient
 d = LedgerClient()
 
 def exchange_and_expect(expected_output_hex: str, ins: int, data_hex: str = ''):
-    print(f"\n-> e0{ins:02x}0000{data_hex}")
     r = d.apdu_exchange(ins, bytes.fromhex(data_hex))
-    print(f"<- {r.hex()}9000")
+    print(f"<- {r.hex()}")
     assert r.hex() == expected_output_hex.lower()
 
 

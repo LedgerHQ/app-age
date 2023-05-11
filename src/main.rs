@@ -26,16 +26,30 @@ fn display_homescreen() {
 extern "C" fn sample_main() {
     let mut comm = io::Comm::new();
 
-    display_homescreen();
+    // Increased every tick until standby. Resetted if a button is pressed.
+    let mut standby_tick_count = 0;
 
     loop {
         // Wait for either a specific button push to exit the app
         // or an APDU command
         match comm.next_event() {
             io::Event::Button(ButtonEvent::BothButtonsRelease) => nanos_sdk::exit_app(0),
-            io::Event::Command(ins) => match handle_apdu(&mut comm, ins) {
-                Ok(()) => comm.reply_ok(),
-                Err(sw) => comm.reply(sw),
+            io::Event::Command(ins) => {
+                match handle_apdu(&mut comm, ins) {
+                    Ok(()) => comm.reply_ok(),
+                    Err(sw) => comm.reply(sw),
+                };
+                standby_tick_count = 0;
+            },
+            io::Event::Ticker => {
+                if standby_tick_count == 0 {
+                    // Show message
+                    display_homescreen();
+                } else if standby_tick_count >= 300 {
+                    nanos_sdk::exit_app(0);
+                }
+
+                standby_tick_count += 1;
             },
             _ => (),
         }
@@ -66,12 +80,10 @@ fn handle_apdu(comm: &mut io::Comm, ins: Ins) -> Result<(), Reply> {
 
     match ins {
         Ins::GetRecipient => {
-            if Validator::new("Send recipient").ask() {
-                let pk = Secp256k1::derive_from_path(&AGE_BIP32_PATH)
-                    .public_key()
-                    .map_err(|x| Reply(0x6eu16 | (x as u16 & 0xff)))?;
-                comm.append(pk.as_ref());
-            }
+            let pk = Secp256k1::derive_from_path(&AGE_BIP32_PATH)
+                .public_key()
+                .map_err(|x| Reply(0x6eu16 | (x as u16 & 0xff)))?;
+            comm.append(pk.as_ref());
         }
         Ins::Unwrap => {
             if Validator::new("Decrypt message").ask() {
