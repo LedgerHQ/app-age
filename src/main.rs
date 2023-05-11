@@ -2,13 +2,13 @@
 #![no_main]
 
 use nanos_sdk::buttons::ButtonEvent;
-use nanos_sdk::ecc::{Secp256k1, SeedDerive};
+use nanos_sdk::ecc::{Secp256k1, SeedDerive, CxError};
 use nanos_sdk::io;
 use nanos_sdk::io::ApduHeader;
 use nanos_sdk::io::Reply;
 
-use nanos_ui::{ui::Validator, bitmaps::Glyph};
 use nanos_ui::layout::{Layout, Location, StringPlace};
+use nanos_ui::{bitmaps::Glyph, ui::Validator};
 
 use include_gif::include_gif;
 
@@ -40,7 +40,7 @@ extern "C" fn sample_main() {
                     Err(sw) => comm.reply(sw),
                 };
                 standby_tick_count = 0;
-            },
+            }
             io::Event::Ticker => {
                 if standby_tick_count == 0 {
                     // Show message
@@ -50,7 +50,7 @@ extern "C" fn sample_main() {
                 }
 
                 standby_tick_count += 1;
-            },
+            }
             _ => (),
         }
     }
@@ -72,25 +72,41 @@ impl From<ApduHeader> for Ins {
     }
 }
 
+enum AgeError {
+    CryptoError(u16),
+    DataError,
+}
 
-fn handle_apdu(comm: &mut io::Comm, ins: Ins) -> Result<(), Reply> {
-    if comm.rx == 0 {
-        return Err(io::StatusWords::NothingReceived.into());
+impl From<CxError> for AgeError {
+    fn from(code: CxError) -> AgeError {
+        AgeError::CryptoError(code as u16)
     }
+}
 
+impl From<io::StatusWords> for AgeError {
+    fn from(_: io::StatusWords) -> AgeError {
+        AgeError::DataError
+    }
+}
+impl From<AgeError> for Reply {
+    fn from(c: AgeError) -> Reply {
+        match c {
+            AgeError::CryptoError(code) => Reply(code),
+            AgeError::DataError => Reply(0x6e77),
+        }
+    }
+}
+
+fn handle_apdu(comm: &mut io::Comm, ins: Ins) -> Result<(), AgeError> {
     match ins {
         Ins::GetRecipient => {
-            let pk = Secp256k1::derive_from_path(&AGE_BIP32_PATH)
-                .public_key()
-                .map_err(|x| Reply(0x6eu16 | (x as u16 & 0xff)))?;
+            let pk = Secp256k1::derive_from_path(&AGE_BIP32_PATH).public_key()?;
             comm.append(pk.as_ref());
         }
         Ins::Unwrap => {
             if Validator::new("Decrypt message").ask() {
-                let sk = Secp256k1::derive_from_path(&AGE_BIP32_PATH);
                 let share = comm.get_data()?;
-                let ans = sk.ecdh(share)
-                    .map_err(|_| Reply(0x6f00u16))?;
+                let ans = Secp256k1::derive_from_path(&AGE_BIP32_PATH).ecdh(share)?;
                 comm.append(ans.as_ref());
             }
         }
