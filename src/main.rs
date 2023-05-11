@@ -45,7 +45,7 @@ extern "C" fn sample_main() {
                 if standby_tick_count == 0 {
                     // Show message
                     display_homescreen();
-                } else if standby_tick_count >= 300 {
+                } else if standby_tick_count >= 3000 {
                     nanos_sdk::exit_app(0);
                 }
 
