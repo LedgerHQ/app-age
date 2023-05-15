@@ -1,8 +1,9 @@
 #![no_std]
 #![no_main]
 
+use nanos_sdk::bindings::{cx_hash_sha256, CX_SHA256_SIZE};
 use nanos_sdk::buttons::ButtonEvent;
-use nanos_sdk::ecc::{Secp256k1, SeedDerive, CxError};
+use nanos_sdk::ecc::{CxError, Secp256k1, SeedDerive};
 use nanos_sdk::io;
 use nanos_sdk::io::ApduHeader;
 use nanos_sdk::io::Reply;
@@ -14,7 +15,7 @@ use include_gif::include_gif;
 
 nanos_sdk::set_panic!(nanos_sdk::exiting_panic);
 
-pub const AGE_BIP32_PATH: [u32; 4] = nanos_sdk::ecc::make_bip32_path(b"m/414745'/0'/0'/0'");
+pub const AGE_BIP32_PATH: [u32; 3] = nanos_sdk::ecc::make_bip32_path(b"m/6383461'/0'/0");
 pub const LOGO: Glyph = Glyph::from_include(include_gif!("logo.gif"));
 
 fn display_homescreen() {
@@ -59,14 +60,16 @@ extern "C" fn sample_main() {
 #[repr(u8)]
 enum Ins {
     GetRecipient,
-    Unwrap,
+    ConfirmRecipient,
+    GetSharedKey,
 }
 
 impl From<ApduHeader> for Ins {
     fn from(header: ApduHeader) -> Ins {
         match header.ins {
+            1 => Ins::ConfirmRecipient,
             2 => Ins::GetRecipient,
-            3 => Ins::Unwrap,
+            3 => Ins::GetSharedKey,
             _ => panic!(),
         }
     }
@@ -74,7 +77,9 @@ impl From<ApduHeader> for Ins {
 
 enum AgeError {
     CryptoError(u16),
+    TagMismatch,
     DataError,
+    DeniedByUser,
 }
 
 impl From<CxError> for AgeError {
@@ -92,23 +97,49 @@ impl From<AgeError> for Reply {
     fn from(c: AgeError) -> Reply {
         match c {
             AgeError::CryptoError(code) => Reply(code),
+            AgeError::TagMismatch => Reply(0x6af0),
             AgeError::DataError => Reply(0x6e77),
+            AgeError::DeniedByUser => Reply(0x69f0),
         }
     }
 }
 
 fn handle_apdu(comm: &mut io::Comm, ins: Ins) -> Result<(), AgeError> {
     match ins {
+        Ins::ConfirmRecipient => {
+            let tag = comm.get_data()?;
+            let pk = Secp256k1::derive_from_path(&AGE_BIP32_PATH).public_key()?;
+            let mut recomputed_tag = [0; CX_SHA256_SIZE as usize];
+
+            unsafe {
+                cx_hash_sha256(
+                    pk.as_ref().as_ptr(),
+                    pk.as_ref().len() as u32,
+                    recomputed_tag.as_mut_ptr(),
+                    recomputed_tag.len() as u32,
+                );
+            }
+
+            if tag != recomputed_tag {
+                return Err(AgeError::TagMismatch);
+            }
+
+            comm.append(pk.as_ref());
+        }
         Ins::GetRecipient => {
+            if !Validator::new("Send recipient").ask() {
+                return Err(AgeError::DeniedByUser);
+            }
             let pk = Secp256k1::derive_from_path(&AGE_BIP32_PATH).public_key()?;
             comm.append(pk.as_ref());
         }
-        Ins::Unwrap => {
-            if Validator::new("Decrypt message").ask() {
-                let share = comm.get_data()?;
-                let ans = Secp256k1::derive_from_path(&AGE_BIP32_PATH).ecdh(share)?;
-                comm.append(ans.as_ref());
+        Ins::GetSharedKey => {
+            if !Validator::new("Send decryption key").ask() {
+                return Err(AgeError::DeniedByUser);
             }
+            let share = comm.get_data()?;
+            let ans = Secp256k1::derive_from_path(&AGE_BIP32_PATH).ecdh(share)?;
+            comm.append(ans.as_ref());
         }
     }
 
