@@ -9,7 +9,10 @@ use nanos_sdk::io::ApduHeader;
 use nanos_sdk::io::Reply;
 
 use nanos_ui::layout::{Layout, Location, StringPlace};
-use nanos_ui::{bitmaps::Glyph, ui::Validator};
+use nanos_ui::{
+    bitmaps::Glyph,
+    ui::{popup, Validator},
+};
 
 use include_gif::include_gif;
 
@@ -26,6 +29,8 @@ fn display_homescreen() {
 #[no_mangle]
 extern "C" fn sample_main() {
     let mut comm = io::Comm::new();
+
+    popup("Pending Review");
 
     // Increased every tick until standby. Resetted if a button is pressed.
     let mut standby_tick_count = 0;
