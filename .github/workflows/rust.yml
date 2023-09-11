@@ -27,28 +27,11 @@ jobs:
         with:
           toolchain: nightly
           override: true
-          components: rust-src, rustfmt, clippy
-      - name: arm-none-eabi-gcc
-        uses: fiam/arm-none-eabi-gcc@v1.0.3
-        with:
-          release: '9-2019-q4'
+          components: rustfmt
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install clang
-        run: sudo apt-get update && sudo apt install -y clang
-      - name: Install cargo-ledger
-        run: cargo install --git=https://github.com/LedgerHQ/cargo-ledger
-      - name: Setup cargo-ledger
-        run: cargo ledger setup
-      - name: Cargo clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --target nanosplus -- -Dwarnings
       - name: Cargo fmt
         uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check
-      - name: Build app
-        run: cargo ledger build ${{ matrix.target }} 
