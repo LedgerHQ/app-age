@@ -1,4 +1,4 @@
-name: Rust
+name: Rust fmt
 
 on:
   push:
@@ -13,23 +13,18 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_clippy_fmt:
+  rust_fmt:
     runs-on: ubuntu-latest
-
-    strategy:
-          matrix:
-            target: ["nanox", "nanosplus"]
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
           override: true
           components: rustfmt
-      - name: Checkout
-        uses: actions/checkout@v3
+
       - name: Cargo fmt
         uses: actions-rs/cargo@v1
         with:
