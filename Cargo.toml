@@ -15,10 +15,10 @@ include_gif = { git = "https://github.com/LedgerHQ/sdk_include_gif" }
 opt-level = 'z'
 lto = true
 
-[package.metadata.nanos]
+[package.metadata.ledger]
 curve = ["secp256k1"]
 flags = "0"
-icon = "ferris.gif"
-icon_small = "icon_small.gif"
 name = "Age identity"
-path = ["m/6383461'"]
+path = ["6383461'"]
+nanox.icon = "icon_small.gif"
+nanosplus.icon = "icon_small.gif"
