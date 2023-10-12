@@ -8,9 +8,9 @@ This app is used to manage age identity on a Ledger device.
 
 ## Installing the app
 
-### Ledger Live App catalog (Nano S Plus only)
+### Ledger Live App catalog
 
-A version of this app for __Nano S Plus__ is available on __Ledger Live__. To install it:
+A version of this app for __Nano S Plus__ and __Nano X__ is available on __Ledger Live__. To install it:
 
 * Open [Ledger Live](https://www.ledger.com/ledger-live)
 * Since the app is still in pre-release, you need to enable Developer mode and manually choose the right app provider.
@@ -23,9 +23,11 @@ A version of this app for __Nano S Plus__ is available on __Ledger Live__. To in
 
 ### Local building and installing
 
-You can also compile this app locally and load it to your device by using [Cargo Ledger](https://github.com/LedgerHQ/cargo-ledger).
+You can also compile this app locally by executing `cargo ledger build <device>` (with `<device>` being either `nanosplus` or `nanox`).
 
-To do so, just execute: `cargo ledger build nanos --load`.
+Additionally, you can load the app to your device by using [Cargo Ledger](https://github.com/LedgerHQ/cargo-ledger). Please note that loading this app on a device without using Ledger Live is only available for __Nano S Plus__ and requires the [`ledgerctl`](https://github.com/LedgerHQ/ledgerctl) Python tool.
+
+To do so, just execute: `cargo ledger build nanosplus --load`. 
 
 ## Requirements
 
