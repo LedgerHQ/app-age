@@ -7,6 +7,7 @@ authors = ["Nics"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ledger-sdk-sys = { git = "https://github.com/LedgerHQ/secure-sdk-rust" }
 nanos_sdk = { git = "https://github.com/LedgerHQ/ledger-nanos-sdk.git" }
 nanos_ui = { git = "https://github.com/LedgerHQ/ledger-nanos-ui.git" }
 include_gif = { git = "https://github.com/LedgerHQ/sdk_include_gif" }

@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use nanos_sdk::bindings::{cx_hash_sha256, CX_SHA256_SIZE};
+use ledger_sdk_sys::{cx_hash_sha256, CX_SHA256_SIZE};
 use nanos_sdk::buttons::ButtonEvent;
 use nanos_sdk::ecc::{CxError, Secp256k1, SeedDerive};
 use nanos_sdk::io;
@@ -119,9 +119,9 @@ fn handle_apdu(comm: &mut io::Comm, ins: Ins) -> Result<(), AgeError> {
             unsafe {
                 cx_hash_sha256(
                     pk.as_ref().as_ptr(),
-                    pk.as_ref().len() as u32,
+                    pk.as_ref().len(),
                     recomputed_tag.as_mut_ptr(),
-                    recomputed_tag.len() as u32,
+                    recomputed_tag.len(),
                 );
             }
 
