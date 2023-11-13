@@ -41,11 +41,10 @@ extern "C" fn sample_main() {
         screen_update();
 
         loop {
-            match comm.next_event::<ApduHeader>() {
-                io::Event::Button(LeftButtonRelease | RightButtonRelease | BothButtonsRelease) => {
-                    break
-                }
-                _ => (),
+            if let io::Event::Button(LeftButtonRelease | RightButtonRelease | BothButtonsRelease) =
+                comm.next_event::<ApduHeader>()
+            {
+                break;
             }
         }
     }
