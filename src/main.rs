@@ -11,7 +11,8 @@ use nanos_sdk::io::Reply;
 use nanos_ui::layout::{Layout, Location, StringPlace};
 use nanos_ui::{
     bitmaps::Glyph,
-    ui::{popup, Validator},
+    screen_util::screen_update,
+    ui::{clear_screen, Validator},
 };
 
 use include_gif::include_gif;
@@ -30,7 +31,24 @@ fn display_homescreen() {
 extern "C" fn sample_main() {
     let mut comm = io::Comm::new();
 
-    popup("Pending Review");
+    // Developer mode / pending review popup
+    // must be cleared with user interaction
+    {
+        use ButtonEvent::*;
+
+        clear_screen();
+        "Pending Review".place(Location::Middle, Layout::Centered, false);
+        screen_update();
+
+        loop {
+            match comm.next_event::<ApduHeader>() {
+                io::Event::Button(LeftButtonRelease | RightButtonRelease | BothButtonsRelease) => {
+                    break
+                }
+                _ => (),
+            }
+        }
+    }
 
     // Increased every tick until standby. Resetted if a button is pressed.
     let mut standby_tick_count = 0;
